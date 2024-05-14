@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recursive Linear Search</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        input, button { padding: 10px; font-size: 16px; }
+        pre { background-color: #f4f4f4; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Recursive Linear Search</h1>
+    <input type="text" id="searchWord" placeholder="Enter a word to search..." />
+    <button onclick="performSearch()">Search</button>
+    <p id="result"></p>
+    <pre id="arrayOutput"></pre>
+    <script>
+        // Создаем массив слов
+        const words = ["apple", "banana", "cherry", "date", "elderberry", "fig", "grape", "honeydew", "kiwi", "lemon"];
+        document.getElementById('arrayOutput').textContent = "Array: " + words.join(', ');
+
+        // Рекурсивная функция линейного поиска
+        function recursiveSearch(arr, target, index = 0) {
+            if (index >= arr.length) {
+                return -1;  // базовый случай: слово не найдено
+            } else if (arr[index] === target) {
+                return index;  // базовый случай: слово найдено
+            } else {
+                return recursiveSearch(arr, target, index + 1);  // рекурсивный вызов
+            }
+        }
+
+        // Функция для запуска поиска по слову из текстового поля
+        function performSearch() {
+            const word = document.getElementById('searchWord').value;
+            const resultIndex = recursiveSearch(words, word);
+            const resultText = resultIndex !== -1 ? `Word '${word}' found at index ${resultIndex}.` : `Word '${word}' not found.`;
+            document.getElementById('result').textContent = resultText;
+        }
+    </script>
+</body>
+</html>

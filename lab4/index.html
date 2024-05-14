@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sorting Algorithms Performance Comparison</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <canvas id="performanceChart" width="800" height="400"></canvas>
+    <script>
+        const labels = [10000, 10000, 20000, 30000, 40000, 50000]; // Обновленные размеры массивов для тестирования
+        const data = {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Bubble Sort Time (ms)',
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data: [],
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Bose-Nelson Sort Time (ms)',
+                    backgroundColor: 'rgb(99, 255, 132)',
+                    borderColor: 'rgb(99, 255, 132)',
+                    data: [],
+                    yAxisID: 'y'
+                }
+            ]
+        };
+
+        const config = {
+            type: 'line',
+            data: data,
+            options: {
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                    }
+                }
+            }
+        };
+
+        const chart = new Chart(document.getElementById('performanceChart'), config);
+
+        function generateRandomArray(n) {
+            return Array.from({ length: n }, () => Math.floor(Math.random() * 201) - 100);
+        }
+
+        function bubbleSort(arr) {
+            let n = arr.length;
+            let swapped;
+            let iterationCount = 0;
+            do {
+                swapped = false;
+                for (let i = 1; i < n; i++) {
+                    iterationCount++;
+                    if (arr[i - 1] > arr[i]) {
+                        [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]];
+                        swapped = true;
+                    }
+                }
+                n--;
+            } while (swapped);
+            return iterationCount;
+        }
+
+        function boseNelsonSort(arr, start, end, iterationCounter = {count: 0}) {
+            if (end - start > 1) {
+                let step = Math.floor((end - start) / 2);
+                for (let i = start; i < start + step; i++) {
+                    iterationCounter.count++;
+                    if (arr[i] > arr[i + step]) {
+                        [arr[i], arr[i + step]] = [arr[i + step], arr[i]];
+                    }
+                }
+                boseNelsonSort(arr, start, start + step, iterationCounter);
+                boseNelsonSort(arr, start + step, end, iterationCounter);
+            }
+            return iterationCounter.count;
+        }
+
+        async function runPerformanceTest() {
+            for (let n of labels) {
+                let randomArray = generateRandomArray(n);
+                let copyArray = [...randomArray];
+
+                // Bubble Sort
+                const startTimeBubble = performance.now();
+                let bubbleIterations = bubbleSort(randomArray);
+                const endTimeBubble = performance.now();
+                const bubbleTime = endTimeBubble - startTimeBubble;
+
+                // Bose-Nelson Sort
+                let iterationCounter = {count: 0};
+                const startTimeBN = performance.now();
+                let bnIterations = boseNelsonSort(copyArray, 0, copyArray.length, iterationCounter);
+                const endTimeBN = performance.now();
+                const bnTime = endTimeBN - startTimeBN;
+
+                // Update chart
+                data.datasets[0].data.push(bubbleTime);
+                data.datasets[1].data.push(bnTime);
+                chart.update();
+
+                console.log(`n = ${n}, Bubble Sort Iterations: ${bubbleIterations}, Bose-Nelson Sort Iterations: ${bnIterations}, Bose-Nelson Sort Time: ${bnTime.toFixed(2)} ms`);
+            }
+        }
+
+        runPerformanceTest(); // Вызов функции для запуска тестов
+    </script>
+</body>
+</html>

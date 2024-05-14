@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interpolation Search Evaluation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        input, button { padding: 10px; font-size: 16px; }
+        pre { background-color: #f4f4f4; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Interpolation Search Evaluation</h1>
+    <input type="number" id="searchValue" placeholder="Enter a number to search..." />
+    <button onclick="performSearch()">Search</button>
+    <p id="result"></p>
+    <pre id="arrayOutput"></pre>
+    <h3>Performance Metrics</h3>
+    <p>Search Time: <span id="searchTime">-</span> ms</p>
+    <p>Memory Usage: <span id="memoryUsage">-</span> bytes</p>
+    <script>
+        // Генерация отсортированного массива случайных чисел
+        const arr = Array.from({length: 100000}, () => Math.floor(Math.random() * 101)).sort((a, b) => a - b);
+        document.getElementById('arrayOutput').textContent = "Array: " + arr.slice(0, 100).join(', ') + ", ...";
+
+        // Функция интерполирующего поиска
+        function interpolationSearch(arr, x) {
+            let low = 0, high = arr.length - 1;
+            let startTime = performance.now();
+
+            while (low <= high && x >= arr[low] && x <= arr[high]) {
+                if (low === high) {
+                    if (arr[low] === x) return { index: low, time: performance.now() - startTime };
+                    return { index: -1, time: performance.now() - startTime };
+                }
+
+                let pos = low + Math.floor(((high - low) / (arr[high] - arr[low])) * (x - arr[low]));
+
+                if (arr[pos] === x) {
+                    return { index: pos, time: performance.now() - startTime };
+                }
+
+                if (arr[pos] < x) {
+                    low = pos + 1;
+                } else {
+                    high = pos - 1;
+                }
+            }
+            return { index: -1, time: performance.now() - startTime };
+        }
+
+        // Функция для запуска поиска по значению из текстового поля
+        function performSearch() {
+            const x = parseInt(document.getElementById('searchValue').value);
+            const result = interpolationSearch(arr, x);
+            const resultText = result.index !== -1 ? `Element found at index ${result.index}.` : "Element not found.";
+            document.getElementById('result').textContent = resultText;
+            document.getElementById('searchTime').textContent = result.time.toFixed(3);
+            document.getElementById('memoryUsage').textContent = `${(JSON.stringify(arr).length + JSON.stringify(result).length)}`;
+        }
+    </script>
+</body>
+</html>

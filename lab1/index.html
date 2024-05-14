@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Performance Graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <canvas id="performanceChart" width="800" height="400"></canvas>
+    <script>
+        const labels = [10000000, 20000000, 30000000, 40000000, 50000000];
+        const data = {
+            labels: labels,
+            datasets: [{
+                label: 'Время выполнения (мс)',
+                backgroundColor: 'rgb(255, 99, 132)',
+                borderColor: 'rgb(255, 99, 132)',
+                data: [],
+            }]
+        };
+
+        const config = {
+            type: 'line',
+            data: data,
+            options: {}
+        };
+
+        const chart = new Chart(
+            document.getElementById('performanceChart'),
+            config
+        );
+
+        // Функции для выполнения программы и замера времени
+        function generateRandomArray(n) {
+            return Array.from({ length: n }, () => Math.floor(Math.random() * 201) - 100);
+        }
+
+        function calculateSums(arr) {
+            let negativeSum = 0;
+            let otherSum = 0;
+            arr.forEach(num => {
+                if (num < 0) {
+                    negativeSum += num;
+                } else {
+                    otherSum += num;
+                }
+            });
+            return { negativeSum, otherSum };
+        }
+
+        async function runPerformanceTest() {
+            for (let n of labels) {
+                const startTime = performance.now();
+                const randomArray = generateRandomArray(n);
+                const sums = calculateSums(randomArray);
+                const endTime = performance.now();
+                const elapsedTime = endTime - startTime;
+                console.log(`n = ${n}, Сумма отрицательных чисел: ${sums.negativeSum}, Сумма остальных чисел: ${sums.otherSum}, Время выполнения: ${elapsedTime.toFixed(2)} мс`);
+                chart.data.datasets[0].data.push(elapsedTime);
+                chart.update();
+            }
+        }
+
+        runPerformanceTest(); // Вызов функции для запуска тестов
+    </script>
+</body>
+</html>
