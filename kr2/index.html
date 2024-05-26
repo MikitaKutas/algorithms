@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ring Chain Problem</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        svg {
+            border: 1px solid black;
+        }
+        circle {
+            fill: lightblue;
+            stroke: steelblue;
+            stroke-width: 2px;
+        }
+        line {
+            stroke: gray;
+            stroke-width: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ring Chain Problem</h1>
+    <svg id="svg" width="800" height="600"></svg>
+    <script>
+        // Example adjacency matrix
+        const A = [
+            [0, 1, 1, 0],
+            [1, 0, 1, 1],
+            [1, 1, 0, 0],
+            [0, 1, 0, 0]
+        ];
+
+        const width = 800;
+        const height = 600;
+
+        const svg = d3.select("#svg");
+
+        const nodes = d3.range(A.length).map(i => ({id: i}));
+        const links = [];
+
+        // Create links from adjacency matrix
+        for (let i = 0; i < A.length; i++) {
+            for (let j = i + 1; j < A.length; j++) {
+                if (A[i][j] === 1) {
+                    links.push({source: i, target: j});
+                }
+            }
+        }
+
+        // Remove minimum number of nodes to form a chain
+        function findMinRemovalToChain(matrix) {
+            // Identify nodes to remove using a simple heuristic
+            const degrees = matrix.map(row => row.reduce((sum, val) => sum + val, 0));
+            const toRemove = [];
+            while (!isChain(matrix)) {
+                const maxDegreeNode = degrees.indexOf(Math.max(...degrees));
+                toRemove.push(maxDegreeNode);
+                matrix.forEach(row => row[maxDegreeNode] = 0);
+                matrix[maxDegreeNode] = matrix[maxDegreeNode].map(() => 0);
+                degrees[maxDegreeNode] = 0;
+            }
+            return toRemove;
+        }
+
+        function isChain(matrix) {
+            const degrees = matrix.map(row => row.reduce((sum, val) => sum + val, 0));
+            const chain = degrees.filter(degree => degree > 2).length === 0;
+            const ends = degrees.filter(degree => degree === 1).length;
+            return chain && ends === 2;
+        }
+
+        const toRemove = findMinRemovalToChain(JSON.parse(JSON.stringify(A)));
+        console.log('Nodes to remove:', toRemove);
+
+        // Remove nodes from visualization
+        const filteredNodes = nodes.filter(node => !toRemove.includes(node.id));
+        const filteredLinks = links.filter(link => !toRemove.includes(link.source) && !toRemove.includes(link.target));
+
+        // Create the simulation
+        const simulation = d3.forceSimulation(filteredNodes)
+            .force("link", d3.forceLink(filteredLinks).id(d => d.id).distance(100))
+            .force("charge", d3.forceManyBody().strength(-400))
+            .force("center", d3.forceCenter(width / 2, height / 2));
+
+        // Draw links
+        const link = svg.append("g")
+            .selectAll("line")
+            .data(filteredLinks)
+            .enter().append("line");
+
+        // Draw nodes
+        const node = svg.append("g")
+            .selectAll("circle")
+            .data(filteredNodes)
+            .enter().append("circle")
+            .attr("r", 20)
+            .call(drag(simulation));
+
+        // Define drag behavior
+        function drag(simulation) {
+            function dragstarted(event, d) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
+
+            function dragged(event, d) {
+                d.fx = event.x;
+                d.fy = event.y;
+            }
+
+            function dragended(event, d) {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
+
+            return d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended);
+        }
+
+        // Update simulation on every tick
+        simulation.on("tick", () => {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            node
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y);
+        });
+    </script>
+</body>
+</html>
